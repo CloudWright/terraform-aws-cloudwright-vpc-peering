@@ -72,7 +72,7 @@ The VPC we are peering will be referred to as `vpc-PEERED_ACCT_ID`, within the A
     {
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::337460175662:user/terraform_provisioner"
+        "AWS": "arn:aws:iam::DZ_ACCT_ID:user/terraform_provisioner"
       },
       "Action": "sts:AssumeRole"
     }
