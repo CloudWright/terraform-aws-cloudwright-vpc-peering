@@ -27,9 +27,9 @@ While this Terraform module is designed to work out-of-the-box on standard AWS V
 
 This module provisions network infrastructure, but does not handle account, role or user provisioning.  To use this module, first provision (either manually or in your own Terraform):
 
-- an AWS account in which to provision infrastructure (here, `XXXXX`)
+- an AWS account in which to provision Deployment Zone infrastructure (here, `DZ_ACCT_ID`)
 
-- a user in account `XXXXX` with permission to assume Roles (here, `terraform_provisioner`), which can be granted via a custom Policy: 
+- a user in account `DZ_ACCT_ID` with permission to assume Roles (here, `terraform_provisioner`), which can be granted via a custom Policy:
 
 ```json
 {
@@ -46,7 +46,7 @@ This module provisions network infrastructure, but does not handle account, role
 
   Generate an Access Key and Secret Access Key for this user; these will be used by Terraform. 
 
-- within account XXXXX, a Role with permission to provision VPC infrastructure (here, `cross-account-vpc-peering-role`).  The `AmazonVPCFullAccess` and `AmazonVPCCrossAccountNetworkInterfaceOperations` managed policies can provide the necessary permissions.  The `terraform_provisioner` user will assume this Role, so it will need the following Trust Relationship:
+- within account DZ_ACCT_ID, a Role with permission to provision VPC infrastructure (here, `cross-account-vpc-peering-role`).  The `AmazonVPCFullAccess` and `AmazonVPCCrossAccountNetworkInterfaceOperations` managed policies can provide the necessary permissions.  The `terraform_provisioner` user will assume this Role, so it will need the following Trust Relationship:
 
 ```json
 {
@@ -55,7 +55,7 @@ This module provisions network infrastructure, but does not handle account, role
     {
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::XXXXX:user/terraform_provisioner"
+        "AWS": "arn:aws:iam::DZ_ACCT_ID:user/terraform_provisioner"
       },
       "Action": "sts:AssumeRole"
     }
@@ -63,7 +63,7 @@ This module provisions network infrastructure, but does not handle account, role
 }
 ```
 
-The VPC we are peering will be referred to as `vpc-YYYYY`, within the AWS account `YYYYY`.  Within account `YYYYY`, provision a Role `cross-account-vpc-peering-role`, again with the `AmazonVPCFullAccess` and `AmazonVPCCrossAccountNetworkInterfaceOperations` managed policies, and the Trust Relationship used for the previous Role:
+The VPC we are peering will be referred to as `vpc-PEERED_ACCT_ID`, within the AWS account `PEERED_ACCT_ID`.  Within account `PEERED_ACCT_ID`, provision a Role `cross-account-vpc-peering-role`, again with the `AmazonVPCFullAccess` and `AmazonVPCCrossAccountNetworkInterfaceOperations` managed policies, and the Trust Relationship used for the previous Role:
 
 ```json
 {
@@ -91,10 +91,10 @@ This Role will only be used to (1) accept a peering request, and (2) configure e
 - **vpc_cidr**: the CIDR of the VPC to provision.  Important: this CIDR **cannot overlap** with the CIDR of the existing peered VPC 
 - **public_cidr**: a CIDR within the above *vpc_cidr*.  See [cloudwright-internet-subnets](https://github.com/CloudWright/terraform-aws-cloudwright-internet-subnets) for more details 
 - **private_cidr**: a CIDR within the above *vpc_cidr*.  See [cloudwright-internet-subnets](https://github.com/CloudWright/terraform-aws-cloudwright-internet-subnets) for more details 
-- **peer_vpc_id**: the existing VPC with which to peer (`vpc-YYYYY`)
-- **peer_owner_id**: the AWS account of the existing VPC (`YYYYY`)
-- **dz_admin_role**: the ARN of the first Role defined above (`arn:aws:iam::XXXXX:role/cross-account-vpc-peering`)
-- **peered_admin_role**: the ARN of the second Role defined above (`arn:aws:iam::YYYYY:role/cross-account-vpc-peering-role`)
+- **peer_vpc_id**: the existing VPC with which to peer (`vpc-PEERED_ACCT_ID`)
+- **peer_owner_id**: the AWS account of the existing VPC (`PEERED_ACCT_ID`)
+- **dz_admin_role**: the ARN of the first Role defined above (`arn:aws:iam::DZ_ACCT_ID:role/cross-account-vpc-peering`)
+- **peered_admin_role**: the ARN of the second Role defined above (`arn:aws:iam::PEERED_ACCT_ID:role/cross-account-vpc-peering-role`)
 
 ### Standalone execution
 
@@ -111,7 +111,7 @@ Export this profile to the `AWS_PROFILE` variable, and invoke Terraform directly
 ```bash
 export AWS_PROFILE=peered-dz
 
-terraform apply -var 'region=us-east-1' -var 'availability_zone=us-east-1a' -var "vpc_cidr=172.32.80.0/20" -var "public_cidr=172.32.82.0/24" -var "private_cidr=172.32.83.0/24" -var "peer_vpc_id=vpc-YYYYY" -var "peer_owner_id=YYYYY" -var "dz_admin_role=arn:aws:iam::XXXXX:role/cross-account-vpc-peering-role" -var "peered_admin_role=arn:aws:iam::YYYYY:role/cross-account-vpc-peering-role"
+terraform apply -var 'region=us-east-1' -var 'availability_zone=us-east-1a' -var "vpc_cidr=172.32.80.0/20" -var "public_cidr=172.32.82.0/24" -var "private_cidr=172.32.83.0/24" -var "peer_vpc_id=vpc-PEERED_ACCT_ID" -var "peer_owner_id=PEERED_ACCT_ID" -var "dz_admin_role=arn:aws:iam::DZ_ACCT_ID:role/cross-account-vpc-peering-role" -var "peered_admin_role=arn:aws:iam::PEERED_ACCT_ID:role/cross-account-vpc-peering-role"
 ```
 
 ### As a module
@@ -128,9 +128,9 @@ module "cloudwright-vpc-peering" {
     vpc_cidr = "172.32.80.0/20"
     public_cidr = "172.32.82.0/24"
     private_cidr = "172.32.83.0/24"
-    peer_vpc_id = "vpc-YYYYY"
-    peer_owner_id = "YYYYY"
-    dz_admin_role = "arn:aws:iam::XXXXX:role/cross-account-vpc-peering-role"
-    peered_admin_role = "arn:aws:iam::YYYYY:role/cross-account-vpc-peering-role"
+    peer_vpc_id = "vpc-PEERED_ACCT_ID"
+    peer_owner_id = "PEERED_ACCT_ID"
+    dz_admin_role = "arn:aws:iam::DZ_ACCT_ID:role/cross-account-vpc-peering-role"
+    peered_admin_role = "arn:aws:iam::PEERED_ACCT_ID:role/cross-account-vpc-peering-role"
 }
 ```
