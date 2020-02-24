@@ -1,45 +1,45 @@
 
 variable "region" {
   type = string
-  description = "TODO"
+  description = "The region in which to provision infrastructure (ex, `us-east-1`)"
 }
 
 variable "availability_zone" {
   type = string
-  description = "TODO"
+  description = "The AZ in which to provision infrastructure (ex, `availability_zone`)"
 }
 
 variable "vpc_cidr" {
   type = string
-  description = "cidr for vpc"
+  description = "The CIDR of the VPC to provision.  Important: this CIDR **cannot overlap** with the CIDR of the existing peered VPC"
 }
 
 variable "public_cidr" {
   type = string
-  description = "Public Subnet CIDR block (should be within 'vpc-cidr')"
+  description = "A CIDR within the above *vpc_cidr*.  See [cloudwright-internet-subnets](https://github.com/CloudWright/terraform-aws-cloudwright-internet-subnets) for more details"
 }
 
 variable "private_cidr" {
   type = string
-  description = "Private Subnet CIDR block (should be within 'vpc-cidr')"
+  description = "A CIDR within the above *vpc_cidr*.  See [cloudwright-internet-subnets](https://github.com/CloudWright/terraform-aws-cloudwright-internet-subnets) for more details "
 }
 
 variable "peer_vpc_id" {
   type = string
-  description = "vpc id to peer with"
+  description = "The existing VPC with which to peer (`vpc-YYYYY`)"
 }
 
 variable "peer_owner_id" {
   type = string
-  description = "account of target vpc"
+  description = "The AWS account of the existing VPC (`YYYYY`)"
 }
 
 variable "dz_admin_role" {
   type = string
-  description = "Role <TODO>"
+  description = "The ARN of the first Role defined above (`arn:aws:iam::XXXXX:role/cross-account-vpc-peering`)"
 }
 
 variable "peered_admin_role" {
   type = string
-  description = "role TODO"
+  description = "The ARN of the second Role defined above (`arn:aws:iam::YYYYY:role/cross-account-vpc-peering-role`)"
 }
